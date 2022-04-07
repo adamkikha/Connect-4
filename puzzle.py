@@ -1,6 +1,5 @@
 from copy import copy
 import pygame
-from agent import Agent
 from circles import Circle
 
 
@@ -25,6 +24,10 @@ class Puzzle:
         self.playable = [] # array of ints
         self.occupied = [] # array of ints
         self.states = []
+        self.rows = []
+        self.columns = []
+        self.nw_digs = []
+        self.ne_digs = []
         # self.clickable_ranges = []
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -46,6 +49,7 @@ class Puzzle:
 
         self.create_circles()
         self.generate_playable()
+        self.generate_checkable()
 
 # create_rects creates the blocks of the game
     def create_circles(self):
@@ -64,6 +68,70 @@ class Puzzle:
             x = SIDES_PADDING + self.diameter/2
             y = y + self.diameter + INBTWN_SPACE
 
+    def generate_checkable(self):
+        row = []
+        for r in range(self.num_row):
+            for c in range(self.num_col):
+                row.append(r*self.num_col+c)
+            self.rows.append(row.copy())
+            row.clear()
+
+        column = []
+        for c in range(self.num_col):
+            for r in range(self.num_row):
+                column.append(r*self.num_col+c)
+            self.columns.append(column.copy())
+            column.clear()
+
+        nw = []
+        c = 0
+        for r in range(self.num_row-4,-1,-1):
+            i = r*self.num_col+c
+            while i < self.num_col*self.num_row:
+                nw.append(i)
+                i += self.num_col+1
+            self.nw_digs.append(nw.copy())
+            nw.clear()
+            i = c*self.num_col+r
+            while i < self.num_col*self.num_row and i != 0:
+                nw.append(i)
+                i += self.num_col+1
+            
+            if(nw):
+                self.nw_digs.append(nw.copy())
+                nw.clear()
+        
+        ne = []
+        i = 3
+        j = 0
+        while j < 4:
+            nw.append(i+j)
+            ne.append(i-j)
+            i += 7
+            j += 1
+        self.nw_digs.append(nw.copy())
+        self.ne_digs.append(ne.copy())
+        nw.clear()
+        ne.clear()
+        c = self.num_col - 1
+        for r in range(self.num_row-4,-1,-1):
+            i = r*self.num_col+c
+            j = c
+            while i < self.num_col*self.num_row and j > -1:
+                ne.append(i)
+                i += self.num_col-1
+                j -= 1
+            self.ne_digs.append(ne.copy())
+            ne.clear()
+            i = self.num_col - r - 1
+            j = i
+            while i < self.num_col*self.num_row and j > -1 and i != 6:
+                ne.append(i)
+                i += self.num_col-1
+                j -= 1
+            if (ne):
+                self.ne_digs.append(ne.copy())
+                ne.clear()
 
     # def generate_checkable(self):
     #     index = []
@@ -150,35 +218,57 @@ class Puzzle:
 
 
     def get_score(self):
-        counter = 0
+        self.player1_score = 0
+        self.player2_score = 0
+        # Horizontal check
+        for row in self.rows:
+            if self.current_state[row[3]] != "0":
+                player = self.current_state[row[3]]
+                self.calc_score(self.current_state,row,player)
+        
+        # Vertical check   
+        for col in self.columns:
+            if self.current_state[col[3]] != "0":
+                if self.current_state[col[2]] == self.current_state[col[3]]:
+                    player = self.current_state[col[3]]
+                    self.calc_score(self.current_state,col,player)
+                
+        # main diagonal check
+        for dig in self.nw_digs:
+            if self.current_state[dig[3]] != "0":
+                if self.current_state[dig[2]] == self.current_state[dig[3]]:
+                    player = self.current_state[dig[3]]
+                    self.calc_score(self.current_state,dig,player)
+                
+        # secondary diagonal check
+        for dig in self.ne_digs:
+            if self.current_state[dig[3]] != "0":
+                if self.current_state[dig[2]] == self.current_state[dig[3]]:
+                    player = self.current_state[dig[3]]
+                    self.calc_score(self.current_state,dig,player)
+                
+    def calc_score(self, state , seq , player):
         i = 0
-        while i <= (self.num_col*self.num_row)-1:
-            while i <= (self.num_col*self.num_row)-1 and self.current_state[i] == self.player1:
-                counter += 1
+        c = 0
+        score = 0
+        while i < len(seq):
+            c = 0
+            while i < len(seq) and state[seq[i]] != player:
                 i += 1
-            # print("1_counter: "+ str(counter))
-            self.calc_score(counter, self.player1)
-            counter = 0
-            while i <= (self.num_col*self.num_row)-1 and self.current_state[i] == self.player2 :
-                counter += 1
-                i += 1
-            # print("2_counter: "+ str(counter))
-            self.calc_score(counter, self.player2)
-            counter = 0
-
-
-    def calc_score(self, sequence_len, player):
-        if sequence_len >= WIN_CONNECTION:
-            score = 1 + (sequence_len- WIN_CONNECTION)
-            # print(player,"score ",score)
-            if player == '1':
-                self.player1_score += score
-            elif player == '2':
-                self.player2_score += score
+            while i < len(seq) and state[seq[i]] == player:
+                c += 1
+                i += 1            
+            if c > 3:
+                score = c - 3
+                break
+            
+        if player == '1':
+            self.player1_score += score
+        else:
+            self.player2_score += score
 
 
     def play(self, x_clicked, y_clicked):
-        agent = Agent(False,3,7,6)
         if self.player_turn == self.player1:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player1_color, self.player_turn)
             if switch_player: 
@@ -187,7 +277,9 @@ class Puzzle:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player2_color, self.player_turn)
             if switch_player:
                 self.player_turn = self.player1
-        print(agent.heu(self.current_state))
+        self.get_score()
+        print("player 1 score: "+ str(self.player1_score)+" \nplayer 2 score: "+ str(self.player2_score))
+        
         if len(self.occupied) == self.num_col*self.num_row:
             print("calc score")
             self.get_score()
