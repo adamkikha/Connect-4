@@ -1,5 +1,6 @@
 from copy import copy
 import pygame
+from agent import Agent
 from circles import Circle
 
 
@@ -11,16 +12,15 @@ INBTWN_SPACE = 4
 
 WIN_CONNECTION = 4
 # blocks constants
-CIRCLE_COLOR = (200,200,200)
-RECT_COLOR = (0,0,0)
-PLAYER1_COLOR = (12, 90, 55)
-PLAYER2_COLOR = (120, 9, 5)
+CIRCLE_COLOR = (100,100,100)
+RECT_COLOR = (0,0,120)
+PLAYER1_COLOR = (200, 0, 0)
+PLAYER2_COLOR = (200, 200, 0)
 
 class Puzzle:
 
     def __init__(self, screen, num_row, num_col, screen_width, screen_height):
         self.screen = screen
-
         self.circles = [] # array of obj
         self.playable = [] # array of ints
         self.occupied = [] # array of ints
@@ -65,10 +65,43 @@ class Puzzle:
             y = y + self.diameter + INBTWN_SPACE
 
 
+    # def generate_checkable(self):
+    #     index = []
+    #     w = []
+    #     nw = []
+    #     n = []
+    #     ne = []
+    #     for r in range(self.num_row):
+    #         for c in range(self.num_col):
+    #             i = r*self.num_col + c
+    #             if c+3 < self.num_col:
+    #                 w.extend([i+1,i+2,i+3])
+    #                 if c+4 < self.num_col:
+    #                     w.append(i+4)
+    #             if r+3 < self.num_row:
+    #                 n.extend([i+self.num_col,i+self.num_col*2,i+self.num_col*3])
+    #                 if r+4 < self.num_row:
+    #                     n.append(i+self.num_col*4)
+    #             if n:
+    #                 if w:
+    #                     nw.extend([i+self.num_col+1,i+(self.num_col+1)*2,i+(self.num_col+1)*3])
+    #                     if len(w) == 4 and len(n) == 4:
+    #                         nw.append(i+(self.num_col+1)*4)
+    #                 if c-3 > -1:
+    #                     ne.extend([i+self.num_col-1,i+(self.num_col-1)*2,i+(self.num_col-1)*3])
+    #                     if c-4 > -1 and len(n) == 4:
+    #                         ne.append(i+(self.num_col-1)*4)
+    #             index.extend([w.copy(),nw.copy(),n.copy(),ne.copy()])
+    #             self.checkable.append(index.copy())
+    #             print(index,end="\n\n\n")
+    #             w.clear()
+    #             nw.clear()
+    #             n.clear()
+    #             ne.clear()
+    #             index.clear()
 
 
-
-
+    
     def generate_playable(self):
         temp = []
         for i in range(self.num_col):
@@ -145,17 +178,16 @@ class Puzzle:
 
 
     def play(self, x_clicked, y_clicked):
+        agent = Agent(False,3,7,6)
         if self.player_turn == self.player1:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player1_color, self.player_turn)
             if switch_player: 
                 self.player_turn = self.player2
-                print(self.current_state)
         elif self.player_turn == self.player2:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player2_color, self.player_turn)
             if switch_player:
                 self.player_turn = self.player1
-                print(self.current_state)
-
+        print(agent.heu(self.current_state))
         if len(self.occupied) == self.num_col*self.num_row:
             print("calc score")
             self.get_score()

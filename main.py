@@ -6,14 +6,13 @@ from puzzle import Puzzle
 from circles import Circle
 from tree import Tree
 from buttons import Button
-from copy import copy
 
 
 NUM_ROW = 6
 NUM_COL = 7
 
 # size constants
-SCREEN_WIDTH = 600
+SCREEN_WIDTH = 670
 SCREEN_HEIGHT = SCREEN_WIDTH + 50
 SIDES_PADDING = 10
 
@@ -103,8 +102,6 @@ def AI_window():
     pygame.quit()
 
 
-pygame.init()
-
 def message(image_name):
     tree_screen = Tk()
     tree_screen.title("State Tree")
@@ -140,6 +137,7 @@ def tree_window(states):
     message(image_name)
 
 
+pygame.init()
 
 # starting the pygame screen
 game_screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
