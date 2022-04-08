@@ -17,15 +17,19 @@ RECT_COLOR = (0,0,139)
 PLAYER1_COLOR = (12, 90, 55)
 PLAYER2_COLOR = (120, 9, 5)
 BOARD_IMG = pygame.image.load("3D Board.png")
-
+FONT_SIZE = 60
 
 class Puzzle:
-    def __init__(self, screen, num_row, num_col, screen_width, screen_height):
+    def __init__(self, screen : pygame.Surface, num_row, num_col, screen_width, screen_height):
         self.screen = screen
         self.circles = [] # array of obj
         self.playable = [] # array of ints
         self.occupied = [] # array of ints
         self.states = []
+        self.rows = []
+        self.columns = []
+        self.nw_digs = []
+        self.ne_digs = []
         # self.clickable_ranges = []
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -44,25 +48,40 @@ class Puzzle:
 
         self.rect = None
         # calculate the block width and height depending on the screen width and height
-        self.diameter = ((self.screen_width - (2 * SIDES_PADDING)) - ((self.num_col-1) * INBTWN_SPACE)) / self.num_col
-
+        self.diameter = min(((self.screen_width - (2 * SIDES_PADDING)) - ((self.num_col-1) * INBTWN_SPACE)) / self.num_col,((self.screen_height - UPPER_PADDING - LOWER_PADDING) - ((self.num_row-1) * INBTWN_SPACE)) / self.num_row)
+        pygame.font.init()
+        self.font = pygame.font.SysFont("calibri",FONT_SIZE)
+        self.adjust_image()
         self.create_circles()
         self.generate_playable()
-        self.adjust_image()
+        self.generate_checkable()
 
-
-
+    def update_score(self):
+        self.get_score()
+        pygame.draw.rect(self.screen,(0,0,0),self.score1rect)
+        pygame.draw.rect(self.screen,(0,0,0),self.score2rect)
+        text = self.font.render("player 1",True,(255,0,0))
+        self.screen.blit(text,(self.score1rect.x + FONT_SIZE/2,self.score1rect.y+2))
+        text = self.font.render("player 2",True,(255,255,0))
+        self.screen.blit(text,(self.score2rect.x + FONT_SIZE/2,self.score2rect.y+2))
+        text = self.font.render(str(self.player1_score),True,(255,0,0))
+        self.screen.blit(text,(self.score1rect.x + self.score1rect.width/2,self.score1rect.y+self.score1rect.height/2+5))
+        text = self.font.render(str(self.player2_score),True,(255,255,0))
+        self.screen.blit(text,(self.score2rect.x + self.score2rect.width/2,self.score2rect.y+self.score2rect.height/2+5))
+        
 # create_rects creates the blocks of the game
     def create_circles(self):
         # initial cordinates of the first block
         x = SIDES_PADDING + self.diameter/2
         y = UPPER_PADDING + self.diameter/2
-        BGROUND_IMG = pygame.image.load("BG.jpg")
+        BGROUND_IMG = pygame.image.load("new_BG.jpg")
         self.screen.blit(BGROUND_IMG,(0, 0))
         #self.screen.blit(BOARD_IMG,(0,0))
-        self.rect = pygame.Rect(SIDES_PADDING-5, UPPER_PADDING-20, self.screen_width-(2*SIDES_PADDING)+10, self.screen_height - UPPER_PADDING - LOWER_PADDING)
-        pygame.draw.rect(self.screen, RECT_COLOR, self.rect)
-        
+        self.rect = pygame.Rect(SIDES_PADDING-2, UPPER_PADDING-2, self.screen_width-(2*SIDES_PADDING)+10, self.screen_height - UPPER_PADDING - LOWER_PADDING)
+        self.score1rect = pygame.Rect(SIDES_PADDING,LOWER_PADDING,self.screen_width*2/5 - SIDES_PADDING,UPPER_PADDING-20)
+        self.score2rect = pygame.Rect(self.screen_width*3/5 ,LOWER_PADDING,self.screen_width*2/5 - SIDES_PADDING,UPPER_PADDING-20)
+        pygame.draw.rect(self.screen, RECT_COLOR,self.rect)
+
         for _ in range(0, self.num_row):
             for _ in range(0, self.num_col):
                 circle = Circle(self.screen, x, y, CIRCLE_COLOR, self.diameter/2)
@@ -75,16 +94,85 @@ class Puzzle:
 
     def generate_playable(self):
         temp = []
-        for i in range(self.num_col):
-            inc = i 
-            for j in range(self.num_row):
-                temp.append(inc)
-                inc += self.num_col
+        for c in range(self.num_col):
+            i = c
+            for r in range(self.num_row):
+                temp.append(i)
+                i += self.num_col
             self.playable.append(copy(temp))
             temp.clear()
 
+    def generate_checkable(self):
+        row = []
+        for r in range(self.num_row):
+            for c in range(self.num_col):
+                row.append(r*self.num_col+c)
+            self.rows.append(row.copy())
+            row.clear()
+
+        column = []
+        for c in range(self.num_col):
+            for r in range(self.num_row):
+                column.append(r*self.num_col+c)
+            self.columns.append(column.copy())
+            column.clear()
+
+        nw = []
+        c = 0
+        for r in range(self.num_row-4,-1,-1):
+            i = r*self.num_col+c
+            while i < self.num_col*self.num_row:
+                nw.append(i)
+                i += self.num_col+1
+            self.nw_digs.append(nw.copy())
+            nw.clear()
+            i = c*self.num_col+r
+            while i < self.num_col*self.num_row and i != 0:
+                nw.append(i)
+                i += self.num_col+1
+            
+            if(nw):
+                self.nw_digs.append(nw.copy())
+                nw.clear()
+        
+        ne = []
+        i = 3
+        j = 0
+        while j < 4:
+            nw.append(i+j)
+            ne.append(i-j)
+            i += 7
+            j += 1
+        self.nw_digs.append(nw.copy())
+        self.ne_digs.append(ne.copy())
+        nw.clear()
+        ne.clear()
+        c = self.num_col - 1
+        for r in range(self.num_row-4,-1,-1):
+            i = r*self.num_col+c
+            j = c
+            while i < self.num_col*self.num_row and j > -1:
+                ne.append(i)
+                i += self.num_col-1
+                j -= 1
+            self.ne_digs.append(ne.copy())
+            ne.clear()
+            i = self.num_col - r - 1
+            j = i
+            while i < self.num_col*self.num_row and j > -1 and i != 6:
+                ne.append(i)
+                i += self.num_col-1
+                j -= 1
+            if (ne):
+                self.ne_digs.append(ne.copy())
+                ne.clear()
 
     def adjust_image(self):
+        Bg = Image.open("BG.jpg")
+        newBg = Bg.resize((self.screen_width,self.screen_height))
+        newBg.save("new_Bg.jpg")
+        Bg = pygame.image.load("new_Bg.jpg")
+        
         redchip = Image.open("redchip.png")
         smallred = redchip.resize((int(self.diameter), int(self.diameter)))
         smallred.save("new_red.png")
@@ -108,17 +196,18 @@ class Puzzle:
             and x_clicked < x_end
             and y_clicked >= y_start
             and y_clicked < y_end):
-                return i
+                return 6-i
 
     def drop_piece(self, x_clicked, y_clicked, image, owner):
         col_index = self.get_col_clicked(x_clicked, y_clicked)
         if col_index != None:
             if self.playable[col_index]:
-                circle_index = max(self.playable[col_index])
-                self.circles[circle_index].update(owner, image)
-                self.playable[col_index].remove(circle_index)
-                self.occupied.append(circle_index)
-                self.update_state(circle_index, owner)
+                index = self.playable[col_index][0]
+                circle_index = 41 - index
+                self.circles[circle_index].update(owner,image)
+                self.playable[col_index].remove(index)
+                self.occupied.append(index)
+                self.update_state(index, owner)
                 return True
             else:
                 return False
@@ -130,46 +219,71 @@ class Puzzle:
         self.states.append(self.current_state)
 
     def get_score(self):
-        counter = 0
+        self.player1_score = 0
+        self.player2_score = 0
+        # Horizontal check
+        for row in self.rows:
+            if self.current_state[row[3]] != "0":
+                player = self.current_state[row[3]]
+                self.calc_score(self.current_state,row,player)
+        
+        # Vertical check   
+        for col in self.columns:
+            if self.current_state[col[3]] != "0":
+                if self.current_state[col[2]] == self.current_state[col[3]]:
+                    player = self.current_state[col[3]]
+                    self.calc_score(self.current_state,col,player)
+                
+        # main diagonal check
+        for dig in self.nw_digs:
+            if self.current_state[dig[3]] != "0":
+                if self.current_state[dig[2]] == self.current_state[dig[3]]:
+                    player = self.current_state[dig[3]]
+                    self.calc_score(self.current_state,dig,player)
+                
+        # secondary diagonal check
+        for dig in self.ne_digs:
+            if self.current_state[dig[3]] != "0":
+                if self.current_state[dig[2]] == self.current_state[dig[3]]:
+                    player = self.current_state[dig[3]]
+                    self.calc_score(self.current_state,dig,player)
+                
+    def calc_score(self, state , seq , player):
         i = 0
-        while i <= (self.num_col*self.num_row)-1:
-            while i <= (self.num_col*self.num_row)-1 and self.current_state[i] == self.player1:
-                counter += 1
+        c = 0
+        score = 0
+        while i < len(seq):
+            c = 0
+            while i < len(seq) and state[seq[i]] != player:
                 i += 1
-            # print("1_counter: "+ str(counter))
-            self.calc_score(counter, self.player1)
-            counter = 0
-            while i <= (self.num_col*self.num_row)-1 and self.current_state[i] == self.player2 :
-                counter += 1
-                i += 1
-            # print("2_counter: "+ str(counter))
-            self.calc_score(counter, self.player2)
-            counter = 0
+            while i < len(seq) and state[seq[i]] == player:
+                c += 1
+                i += 1            
+            if c > 3:
+                score = c - 3
+                break
+            
+        if player == '1':
+            self.player1_score += score
+        else:
+            self.player2_score += score
 
-    def calc_score(self, sequence_len, player):
-        if sequence_len >= WIN_CONNECTION:
-            score = 1 + (sequence_len- WIN_CONNECTION)
-            # print(player,"score ",score)
-            if player == '1':
-                self.player1_score += score
-            elif player == '2':
-                self.player2_score += score
 
 
     def play(self, x_clicked, y_clicked):
 
         if self.player_turn == self.player1:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player1_image, self.player_turn)
-            if switch_player: 
+            if switch_player:
+                self.update_score() 
                 self.player_turn = self.player2
-                print(self.current_state)
 
         elif self.player_turn == self.player2:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player2_image, self.player_turn)
             if switch_player:
+                self.update_score()
                 self.player_turn = self.player1
-                print(self.current_state)
-
+            
         if len(self.occupied) == self.num_col*self.num_row:
             print("calc score")
             self.get_score()

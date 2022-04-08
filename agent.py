@@ -27,10 +27,45 @@ class Agent:
         if k == 0:
             return self.heu(state)
         if max:
-            pass
+            max_state = ""
+            max_value = -100
+            player = "1"
+            for move in self.get_moves(state,player):
+                value , _ = self.minmax(move,k-1,not max)
+                if value > max_value:
+                    max_value = value
+                    max_state = move
+                    
+            return max_value,max_state
         else:
-            pass
-        
+            min_state = ""
+            max_value = 100
+            player = "2"
+            for move in self.get_moves(state,player):
+                value , _ = self.minmax(move,k-1,max)
+                if value < min_value:
+                    min_value = value
+                    min_state = move
+                    
+            return min_value,min_state
+    def transition(self,index,old_state,player):
+        state = list(old_state)
+        state[index] = player
+        state = "".join(state)
+        return state
+     
+    def get_moves(self,state,player):
+        moves = []
+        if self.playable[3]:
+            moves.append(self.transition(self.playable[3][0],state,player))
+        i = 1
+        while i < 4:
+            if self.playable[3+i]:
+                moves.append(self.transition(self.playable[3+i][0],state,player))
+            if self.playable[3-i]:
+                moves.append(self.transition(self.playable[3-i][0],state,player))
+        return moves    
+                
     def eval_seq(self,state : str,seq : list,player : str):
         score = 0
         i = 0

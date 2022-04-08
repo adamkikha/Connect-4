@@ -8,19 +8,18 @@ from tree import Tree
 from buttons import Button
 from copy import copy
 
-
 NUM_ROW = 6
 NUM_COL = 7
 
 # size constants
 SCREEN_WIDTH = 670
-SCREEN_HEIGHT = SCREEN_WIDTH + 100
+SCREEN_HEIGHT = SCREEN_WIDTH + 50
 SIDES_PADDING = 10
 
 WHITE = (255, 255, 255)
 BG_COLOR = WHITE
 # back ground color constant
-BGROUND_IMG = pygame.image.load("BG.jpg")
+BGROUND_IMG = pygame.image.load("new_BG.jpg")
 
 
 # properties of buttons
@@ -73,7 +72,7 @@ def start_window():
             pygame.display.update()
     pygame.quit()
 
-# AI window contains three buttons BFS DFS A*
+# AI window contains Two Buttons: Alpha beta pruning and no pruning
 def AI_window():
     global pruning_selected
     game_screen.blit(BGROUND_IMG,(0, 0))
