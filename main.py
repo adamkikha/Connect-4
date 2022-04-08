@@ -6,6 +6,7 @@ from puzzle import Puzzle
 from circles import Circle
 from tree import Tree
 from buttons import Button
+from copy import copy
 
 
 NUM_ROW = 6
@@ -13,20 +14,21 @@ NUM_COL = 7
 
 # size constants
 SCREEN_WIDTH = 670
-SCREEN_HEIGHT = SCREEN_WIDTH + 50
+SCREEN_HEIGHT = SCREEN_WIDTH + 100
 SIDES_PADDING = 10
 
 WHITE = (255, 255, 255)
 BG_COLOR = WHITE
 # back ground color constant
-# BGROUND_IMG = pygame.image.load("BG.jpg")
+BGROUND_IMG = pygame.image.load("BG.jpg")
+
 
 # properties of buttons
 # TEXT_COLOR = (150,150,150)
 TEXT_COLOR = WHITE
-BUTTONS_COLOR = (12,44,130)
+BUTTONS_COLOR = (0,0,0)
 BUTTON_WIDTH = SCREEN_WIDTH - (2* SIDES_PADDING)
-BUTTON_HEIGHT = 100
+BUTTON_HEIGHT = 120
 FONT_SIZE1 = 50
 FONT_SIZE2 = 30
 
@@ -42,11 +44,12 @@ pruning_selected = None
 # start window contains two buttons play and AI
 def start_window():
     global start_players
+    game_screen.blit(BGROUND_IMG,(0, 0))
     buttons = []
-    player_button = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," 2 Players",TEXT_COLOR,FONT_SIZE1)
+    player_button = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR,"            Player VS Player",TEXT_COLOR,FONT_SIZE1)
     player_button.draw(game_screen)
     buttons.append(player_button)
-    AI_button = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100 + 50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Play against AI",TEXT_COLOR,FONT_SIZE1)
+    AI_button = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100 + 50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR,"              Player VS AI",TEXT_COLOR,FONT_SIZE1)
     AI_button.draw(game_screen)
     buttons.append(AI_button)
     
@@ -72,13 +75,13 @@ def start_window():
 
 # AI window contains three buttons BFS DFS A*
 def AI_window():
-    game_screen.fill(BG_COLOR)
     global pruning_selected
+    game_screen.blit(BGROUND_IMG,(0, 0))
     buttons = []
     pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Alpha-Beta pruning",TEXT_COLOR,FONT_SIZE1)
     pruning.draw(game_screen)
     buttons.append(pruning)
-    no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100 + 50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," No pruning",TEXT_COLOR,FONT_SIZE1)
+    no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100 + 50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
     
@@ -100,6 +103,7 @@ def AI_window():
                             return
             pygame.display.update()
     pygame.quit()
+
 
 
 def message(image_name):
@@ -124,25 +128,17 @@ def message(image_name):
 
 
 def tree_window(states):
-    # states = [["1",["1st_state_child1","1st_state_child2","1st_state_child3","1st_state_child4"]],
-    #         ["2",["2nd_state_child1","2nd_state_child2","2nd_state_child3","2nd_state_child4"]],
-    #         ["3",["3rd_state_child"]],
-    #         ["4",["4th_state_child1","4th_state_child3","4th_state_child4"]],
-    #         ["1st_state_child2",["5th_state_child1","4th_state_child3"]],
-    #         ["6",["6th_state_child1","4th_state_child3"]],
-    #         ["7",["7th_state_child1","4th_state_child3"]]
-    #         ]
     tree = Tree(states, NUM_COL, NUM_ROW)
     image_name = tree.png_name +'.'+tree.extension
     message(image_name)
 
 
-pygame.init()
 
+pygame.init()
 # starting the pygame screen
 game_screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-# draw the background 
-game_screen.fill(BG_COLOR)
+# draw the backgroun
+#game_screen.fill(BG_COLOR)
 # game_screen.blit(BGROUND_IMG,(0,0))
 # set the title
 pygame.display.set_caption("Connect 4")
@@ -154,12 +150,11 @@ pygame.display.set_icon(icon)
 
 start_window()
 if start_players:
+    #game_screen.fill(BG_COLOR)
     puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
+    # playing_circle = Circle(game_screen, puzzle.circles[0].x_pos, puzzle.circles[0].y_pos - puzzle.diameter-10, puzzle.player1_color, puzzle.diameter/2)
+    # playing_circle.draw()
 
-    playing_circle = Circle(game_screen, puzzle.circles[0].x_pos, puzzle.circles[0].y_pos - puzzle.diameter-10, puzzle.player1_color, puzzle.diameter/2)
-    playing_circle.draw()
-
-    running = True # running condition
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -170,16 +165,16 @@ if start_players:
                 x_hovered, y_hovered = pygame.mouse.get_pos()
                 if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
                     clear_rect = pygame.Rect(0, 0, SCREEN_WIDTH, 140)
-                    pygame.draw.rect(game_screen, BG_COLOR, clear_rect)
-                    playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
+                    #pygame.draw.rect(game_screen, BG_COLOR, clear_rect)
+                    # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # store the coordinates of the clicked position
                 x_clicked, y_clicked = pygame.mouse.get_pos()
 
                 puzzle.play(x_clicked , y_clicked)
-                if puzzle.player_turn == '2': playing_circle.update(puzzle.player2_color, '0')
-                else: playing_circle.update(puzzle.player1_color, '0')
+                # if puzzle.player_turn == '2': playing_circle.update(puzzle.player2_color, '0')
+                # else: playing_circle.update(puzzle.player1_color, '0')
                 pygame.display.update()
                 # if puzzle.player_turn == '1': tree_window(copy(puzzle.states))
 
