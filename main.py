@@ -107,7 +107,7 @@ def AI_window():
                                 start_button.draw(game_screen,"  Player Starts")
                                 break
                             else:
-                                start_button.draw(game_screen,"  AI Starts")
+                                start_button.draw(game_screen,"     AI Starts")
                                 break
             pygame.display.update()
     pygame.quit()
