@@ -288,24 +288,20 @@ class Puzzle:
 
 
     def play(self, x_clicked, y_clicked):
-
         if self.player_turn == self.player1:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player1_image, self.player_turn)
             if switch_player:
                 self.update_score() 
                 self.player_turn = self.player2
-                return True
-            return False
-        elif self.player_turn == self.player2:
+        else:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player2_image, self.player_turn)
             if switch_player:
                 self.update_score()
                 self.player_turn = self.player1
-                return True
-            return False
         if len(self.occupied) == self.num_col*self.num_row:
             self.Complete = True
-
+        return switch_player
+        
 
 
 

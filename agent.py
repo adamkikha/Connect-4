@@ -19,20 +19,26 @@ class Agent:
         self.columns = puzzle.columns
         self.nw_digs = puzzle.nw_digs
         self.ne_digs = puzzle.ne_digs
-    
+        self.parent_map = dict()
+        
     def prune_minmax(self,state : str,k : int,max : bool,playable,alpha = None,beta = None):
         if k == 0:
-            return None , self.heu(state)
+            heu = self.heu(state)
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(heu),[])  
+            return None , heu , parent_key
         if alpha is None:
             alpha = -100
             beta = 100
+        children = []
         if max:
             index = max_move = -1
-            max_value = -100
+            value = max_value = -100
             player = "1"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
-                _ , value = self.prune_minmax(move,k-1,not max , p,alpha,beta)
+                _ , value , parent_key = self.prune_minmax(move,k-1,not max , p,alpha,beta)
+                children.append((str(value),str(index),str(parent_key)))
                 if value > max_value:
                     max_value = value
                     max_move = index
@@ -42,16 +48,21 @@ class Agent:
                 
                 if value > alpha:
                     alpha = value
+            
             if max_value == -100:
-                return index , value
-            return max_move , max_value
+                max_value = value
+                max_move = index
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(max_value),children)
+            return max_move , max_value , parent_key
         else:
             index = min_move = -1
-            min_value = 100
+            value = min_value = 100
             player = "2"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
-                _ , value = self.prune_minmax(move,k-1,not max,p,alpha,beta)
+                _ , value , parent_key = self.prune_minmax(move,k-1,not max,p,alpha,beta)
+                children.append((str(value),str(index),str(parent_key)))
                 if value < min_value:
                     min_value = value
                     min_move = index
@@ -62,36 +73,53 @@ class Agent:
                 if value < beta:
                     beta = value
             if min_value == 100:
-                return index , value        
-            return min_move , min_value
+                min_value = value
+                min_move = index
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(min_value),children)        
+            return min_move , min_value, parent_key
     
     def minmax(self,state : str,k : int,max : bool,playable):
         if k == 0:
-            return None , self.heu(state)
+            heu = self.heu(state)
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(heu),[])  
+            return None , heu , parent_key
+        children = []
         if max:
-            max_move = -1
-            max_value = -100
+            index = max_move = -1
+            value = max_value = -100
             player = "1"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
-                _ , value = self.minmax(move,k-1,not max , p)
+                _ , value , parent_key = self.minmax(move,k-1,not max , p)
+                children.append((str(value),str(index),str(parent_key)))
                 if value > max_value:
                     max_value = value
                     max_move = index
-                    
-            return max_move , max_value
+            if max_value == -100:
+                max_value = value
+                max_move = index
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(max_value),children)       
+            return max_move , max_value , parent_key
         else:
-            min_move = -1
-            min_value = 100
+            index = min_move = -1
+            value = min_value = 100
             player = "2"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
-                _ , value = self.minmax(move,k-1,not max,p)
+                _ , value , parent_key = self.minmax(move,k-1,not max,p)
+                children.append((str(value),str(index),str(parent_key)))
                 if value < min_value:
                     min_value = value
                     min_move = index
-                    
-            return min_move , min_value
+            if min_value == 100:
+                min_value = value
+                min_move = index
+            parent_key = str(len(self.parent_map.keys()))
+            self.parent_map[parent_key] = (str(min_value),children)
+            return min_move , min_value , parent_key
         
     def transition(self,index,old_state,player):
         state = list(old_state)

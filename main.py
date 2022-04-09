@@ -1,6 +1,5 @@
 from time import time
 from tkinter import *
-from PIL import ImageTk, Image
 import pygame
 import sys
 from agent import Agent
@@ -83,7 +82,7 @@ def AI_window():
     no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
-    start_button = Button((SCREEN_WIDTH//3), SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH/3,BUTTON_HEIGHT,(0,0,40),"  I Start",TEXT_COLOR,FONT_SIZE1)
+    start_button = Button((SCREEN_WIDTH//4), SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH/3,BUTTON_HEIGHT,(0,0,40),"  Player Starts",TEXT_COLOR,FONT_SIZE1)
     start_button.draw(game_screen)
     buttons.append(start_button)
     I_start = True
@@ -105,7 +104,7 @@ def AI_window():
                         if i == 2:
                             I_start = not I_start
                             if I_start:
-                                start_button.draw(game_screen,"  I Start")
+                                start_button.draw(game_screen,"  Player Starts")
                                 break
                             else:
                                 start_button.draw(game_screen,"  AI Starts")
@@ -114,32 +113,10 @@ def AI_window():
     pygame.quit()
 
 
-
-def window(image_name):
-    tree_screen = Tk()
-    tree_screen.title("State Tree")
-    tree_image = Image.open(image_name)
-    tkimage = ImageTk.PhotoImage(tree_image)
-    image_height = tkimage.height()
-    image_width = tkimage.width()
-
-    tree_screen.geometry(str(image_width) + "x" + str(image_height))
-    frame = Frame(tree_screen, width = image_width, height = image_height)
-    frame.pack()
-    frame.place(anchor='center', relx=0.5, rely=0.5)
-    frame.pack()
-    img = ImageTk.PhotoImage(tree_image)
-    label = Label(frame, image = img)
-    label.pack()
-    tree_screen.update()
-    tree_screen.deiconify()
-    tree_screen.mainloop()
-
-
 def tree_window(states):
-    tree = Tree(states, NUM_COL, NUM_ROW)
+    tree = Tree(states)
     image_name = tree.png_name +'.'+tree.extension
-    window(image_name)
+    tree.display(image_name)
 
 
 
@@ -194,7 +171,7 @@ else:
         minmax = agent.prune_minmax
     else:
         minmax = agent.minmax
-    Tree = True
+    tree = True
     k = 3
     max = False
     buttons = []
@@ -212,9 +189,11 @@ else:
     if not I_start:
         max = True
         ts = time()
-        index , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
+        index , _ , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
         print("time taken = ",time()-ts," s")
         puzzle.play_piece(index)
+        if tree:
+            tree_window(agent.parent_map)
     while not puzzle.Complete:
         pygame.display.update()
         played = False
@@ -239,8 +218,8 @@ else:
                         if buttons[i].check_clicked(x_clicked, y_clicked):
                             Clicked = True
                             if i == 0:
-                                Tree = not Tree
-                                if Tree:
+                                tree = not tree
+                                if tree:
                                     tree_button.draw(game_screen,"  Tree = ON")
                                 else:
                                     tree_button.draw(game_screen,"  Tree = OFF")
@@ -258,14 +237,17 @@ else:
                     if not Clicked:
                         if puzzle.play(x_clicked , y_clicked):
                             played = True
-                    pygame.display.update()
-                    # if puzzle.player_turn == '1': tree_window(copy(puzzle.states))
         pygame.display.update()
+        if puzzle.Complete:
+            break
+        agent.parent_map = dict()
         ts = time()
-        index , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
+        index , _ , _= minmax(puzzle.current_state,k,max,puzzle.playable)
         print("time taken = ",time()-ts," s")
         puzzle.play_piece(index)
         pygame.display.update()
+        if tree:
+            tree_window(agent.parent_map)
     while True:
         for event in pygame.event.get([pygame.QUIT]):
             pygame.quit()
