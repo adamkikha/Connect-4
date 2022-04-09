@@ -28,7 +28,7 @@ class Agent:
             beta = 100
         if max:
             index = max_move = -1
-            max_value = -100
+            value = max_value = -100
             player = "1"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
@@ -47,7 +47,7 @@ class Agent:
             return max_move , max_value
         else:
             index = min_move = -1
-            min_value = 100
+            value = min_value = 100
             player = "2"
             for index , p in self.get_moves(playable):
                 move = self.transition(index,state,player)
