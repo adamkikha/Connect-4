@@ -27,11 +27,13 @@ class Tree:
         self.save_tree()
         
     def create_tree(self,dic : dict):
-        print(len(dic.items()))
         for parent , value in dic.items():
-            self.graph.node(parent,value[0])
+            label = "min\n"+value[0]
+            if value[2]:
+                label = "max\n"+value[0]
+            self.graph.node(parent,label)
             for child in value[1]:
-                self.graph.node(child[2],child[0])
+                # self.graph.node(child[2],child[0])
                 self.graph.edge(parent,child[2],child[1])
     
     def display(self,image_name):
