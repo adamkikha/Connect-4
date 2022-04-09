@@ -207,7 +207,7 @@ else:
         index , _ , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
         print("time taken = ",time()-ts," s")
         print("Number of expanded nodes = " , str(len(agent.parent_map.keys())))
-        puzzle.play_piece(index)
+        puzzle.play_AI(index)
         if tree:
             tree_window(agent.parent_map)
             
@@ -270,7 +270,7 @@ else:
         index , _ , _= minmax(puzzle.current_state,k,max,puzzle.playable)
         print("time taken = ",time()-ts," s")
         print("Number of expanded nodes = " , str(len(agent.parent_map.keys())))
-        puzzle.play_piece(index)
+        puzzle.play_AI(index)
         pygame.display.update()
         if tree:
             tree_window(agent.parent_map)

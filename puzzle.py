@@ -1,4 +1,3 @@
-from copy import copy
 import pygame
 from circles import Circle
 from PIL import Image
@@ -9,9 +8,7 @@ UPPER_PADDING = 150
 LOWER_PADDING = 10
 INBTWN_SPACE = 4
 
-WIN_CONNECTION = 4
 # blocks constants
-# CIRCLE_COLOR = (200,200,200)
 CIRCLE_COLOR = (255,255,255)
 RECT_COLOR = (0,0,139)
 PLAYER1_COLOR = (12, 90, 55)
@@ -68,19 +65,23 @@ class Puzzle:
         text = self.font.render(str(self.player2_score),True,(255,255,0))
         self.screen.blit(text,(self.score2rect.x + self.score2rect.width/2,self.score2rect.y+self.score2rect.height/2+5))
         
-# create_rects creates the blocks of the game
+# creates the circles of the game
     def create_circles(self):
-        # initial cordinates of the first block
+        # initial cordinates of the first circle
         x = SIDES_PADDING + self.diameter/2
         y = UPPER_PADDING + self.diameter/2
         BGROUND_IMG = pygame.image.load("new_BG.jpg")
         self.screen.blit(BGROUND_IMG,(0, 0))
-        #self.screen.blit(BOARD_IMG,(0,0))
+        
+        # game board
         self.rect = pygame.Rect(SIDES_PADDING-2, UPPER_PADDING-2, self.screen_width-(2*SIDES_PADDING)+10, self.screen_height - UPPER_PADDING - LOWER_PADDING)
+        
+        # score rectangles
         self.score1rect = pygame.Rect(SIDES_PADDING,LOWER_PADDING,self.screen_width*2/5 - SIDES_PADDING,UPPER_PADDING-20)
         self.score2rect = pygame.Rect(self.screen_width*3/5 ,LOWER_PADDING,self.screen_width*2/5 - SIDES_PADDING,UPPER_PADDING-20)
         pygame.draw.rect(self.screen, RECT_COLOR,self.rect)
 
+        # draw blanks
         for _ in range(0, self.num_row):
             for _ in range(0, self.num_col):
                 circle = Circle(self.screen, x, y, CIRCLE_COLOR, self.diameter/2)
@@ -90,17 +91,7 @@ class Puzzle:
             x = SIDES_PADDING + self.diameter/2
             y = y + self.diameter + INBTWN_SPACE
 
-
-    # def generate_playable(self):
-    #     temp = []
-    #     for c in range(self.num_col):
-    #         i = c
-    #         for r in range(self.num_row):
-    #             temp.append(i)
-    #             i += self.num_col
-    #         self.playable.append(copy(temp))
-    #         temp.clear()
-
+    # generates all the board's rows, columns and diagonals indicies
     def generate_checkable(self):
         row = []
         for r in range(self.num_row):
@@ -166,6 +157,7 @@ class Puzzle:
                 self.ne_digs.append(ne.copy())
                 ne.clear()
 
+    # resizes background and game pieces to fit window
     def adjust_image(self):
         Bg = Image.open("BG.jpg")
         newBg = Bg.resize((self.screen_width,self.screen_height))
@@ -183,7 +175,7 @@ class Puzzle:
         self.player2_image = pygame.image.load("new_yellow.png")
 
 
-
+    # returns which column was clicked
     def get_col_clicked(self, x_clicked, y_clicked):
         last_circle_index = (self.num_col * self.num_row) -1
         y_end = self.circles[last_circle_index].y_pos + (self.diameter/2)
@@ -197,7 +189,8 @@ class Puzzle:
             and y_clicked < y_end):
                 return 6-i
 
-    def play_piece(self,index):
+    # plays a piece for the AI
+    def play_AI(self,index):
         image = self.player2_image
         if self.player_turn == "1":
             image = self.player1_image
@@ -214,7 +207,8 @@ class Puzzle:
         self.update_score()
         if len(self.occupied) == self.num_col*self.num_row:
             self.Complete = True
-        
+    
+    # checks if column can be played in and plays if available    
     def drop_piece(self, x_clicked, y_clicked, image, owner):
         col_index = self.get_col_clicked(x_clicked, y_clicked)
         if col_index != None:
@@ -229,12 +223,14 @@ class Puzzle:
             else:
                 return False
 
+    # updates the current state by given play
     def update_state(self, index, player):
         self.current_state = list(self.current_state)
         self.current_state[index] = player
         self.current_state = "".join(self.current_state)
         self.states.append(self.current_state)
 
+    # calculates current score
     def get_score(self):
         self.player1_score = 0
         self.player2_score = 0
@@ -264,7 +260,9 @@ class Puzzle:
                 if self.current_state[dig[2]] == self.current_state[dig[3]]:
                     player = self.current_state[dig[3]]
                     self.calc_score(self.current_state,dig,player)
-                
+    
+    # calculates the number of connected fours for a certain player and 
+    # a certian set of indicies            
     def calc_score(self, state , seq , player):
         i = 0
         c = 0
@@ -286,7 +284,7 @@ class Puzzle:
             self.player2_score += score
 
 
-
+    # plays a piece for player
     def play(self, x_clicked, y_clicked):
         if self.player_turn == self.player1:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player1_image, self.player_turn)
