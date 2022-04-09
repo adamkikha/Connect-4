@@ -82,7 +82,7 @@ def AI_window():
     no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
-    start_button = Button((SCREEN_WIDTH//4), SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH/3,BUTTON_HEIGHT,(0,0,40),"  Player Starts",TEXT_COLOR,FONT_SIZE1)
+    start_button = Button(SCREEN_WIDTH//5, SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH*3/5,BUTTON_HEIGHT,(0,0,40),"  Player Starts",TEXT_COLOR,FONT_SIZE1)
     start_button.draw(game_screen)
     buttons.append(start_button)
     I_start = True
@@ -114,6 +114,8 @@ def AI_window():
 
 
 def tree_window(states):
+    if Tree.current_tk:
+        Tree.current_tk.destroy()
     tree = Tree(states)
     image_name = tree.png_name +'.'+tree.extension
     tree.display(image_name)
@@ -234,6 +236,7 @@ else:
                                     k_button.draw(game_screen," "+str(k))
                                     if k == 1:
                                         minus_button.draw(game_screen,color=(170,0,0))
+                            pygame.display.update()
                     if not Clicked:
                         if puzzle.play(x_clicked , y_clicked):
                             played = True

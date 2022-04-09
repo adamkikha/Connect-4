@@ -1,5 +1,6 @@
 from concurrent.futures import thread
 from threading import Thread
+import tkinter
 from PIL import ImageTk, Image
 from tkinter import Frame, Label, Tk
 from graphviz import Digraph
@@ -8,12 +9,14 @@ from graphviz import Digraph
 
 class Tree:
     class drawer(Thread):
-        def __init__(self):
+        def __init__(self,tk : Tk,img):
             super().__init__()
-            self.tk = Tree.current_tk
-            
+            self.tk = tk
+            self.img = img
         def run(self) -> None:
-            self.tk.mainloop()
+            while True:
+                self.tk.update()
+                self.tk.update_idletasks()
     
     current_tk = None
     def __init__(self, states):
@@ -32,9 +35,7 @@ class Tree:
                 self.graph.edge(parent,child[2],child[1])
     
     def display(self,image_name):
-        if Tree.current_tk is not None:
-            Tree.current_tk.destroy()
-        tree_screen = Tk()
+        tree_screen = tkinter.Toplevel()
         tree_screen.title("State Tree")
         tree_image = Image.open(image_name)
         tkimage = ImageTk.PhotoImage(tree_image)
@@ -52,10 +53,10 @@ class Tree:
         tree_screen.update()
         tree_screen.deiconify()
         Tree.current_tk = tree_screen
-        thread = Tree.drawer()
+        thread = Tree.drawer(tree_screen,img)
         thread.start()   
         
     def save_tree(self):
         self.graph.format = self.extension
-        tree = self.graph.unflatten(stagger=20)
+        tree = self.graph.unflatten(stagger=3)
         tree.render(self.png_name)
