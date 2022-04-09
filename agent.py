@@ -12,58 +12,110 @@ from puzzle import Puzzle
 
 class Agent:
 
-    def __init__(self, alpha_beta : bool , k : int,puzzle : Puzzle):
-        self.k = k
-        self.alpha_beta = alpha_beta
+    def __init__(self,puzzle : Puzzle):
         self.num_col = puzzle.num_col
         self.num_row = puzzle.num_row
         self.rows = puzzle.rows
         self.columns = puzzle.columns
         self.nw_digs = puzzle.nw_digs
         self.ne_digs = puzzle.ne_digs
-        self.playable = puzzle.playable
-                
-    def minmax(self,state,k,max : bool):
+    
+    def prune_minmax(self,state : str,k : int,max : bool,playable,alpha = None,beta = None):
         if k == 0:
-            return self.heu(state)
+            return None , self.heu(state)
+        if alpha is None:
+            alpha = -100
+            beta = 100
         if max:
-            max_state = ""
+            index = max_move = -1
             max_value = -100
             player = "1"
-            for move in self.get_moves(state,player):
-                value , _ = self.minmax(move,k-1,not max)
+            for index , p in self.get_moves(playable):
+                move = self.transition(index,state,player)
+                _ , value = self.prune_minmax(move,k-1,not max , p,alpha,beta)
                 if value > max_value:
                     max_value = value
-                    max_state = move
-                    
-            return max_value,max_state
+                    max_move = index
+                
+                if value >= beta:
+                    break
+                
+                if value > alpha:
+                    alpha = value
+            if max_value == -100:
+                return index , value
+            return max_move , max_value
         else:
-            min_state = ""
-            max_value = 100
+            index = min_move = -1
+            min_value = 100
             player = "2"
-            for move in self.get_moves(state,player):
-                value , _ = self.minmax(move,k-1,max)
+            for index , p in self.get_moves(playable):
+                move = self.transition(index,state,player)
+                _ , value = self.prune_minmax(move,k-1,not max,p,alpha,beta)
                 if value < min_value:
                     min_value = value
-                    min_state = move
+                    min_move = index
+                
+                if value <= alpha:
+                    break
+                
+                if value < beta:
+                    beta = value
+            if min_value == 100:
+                return index , value        
+            return min_move , min_value
+    
+    def minmax(self,state : str,k : int,max : bool,playable):
+        if k == 0:
+            return None , self.heu(state)
+        if max:
+            max_move = -1
+            max_value = -100
+            player = "1"
+            for index , p in self.get_moves(playable):
+                move = self.transition(index,state,player)
+                _ , value = self.minmax(move,k-1,not max , p)
+                if value > max_value:
+                    max_value = value
+                    max_move = index
                     
-            return min_value,min_state
+            return max_move , max_value
+        else:
+            min_move = -1
+            min_value = 100
+            player = "2"
+            for index , p in self.get_moves(playable):
+                move = self.transition(index,state,player)
+                _ , value = self.minmax(move,k-1,not max,p)
+                if value < min_value:
+                    min_value = value
+                    min_move = index
+                    
+            return min_move , min_value
+        
     def transition(self,index,old_state,player):
         state = list(old_state)
         state[index] = player
         state = "".join(state)
         return state
      
-    def get_moves(self,state,player):
+    def get_moves(self,playable):
         moves = []
-        if self.playable[3]:
-            moves.append(self.transition(self.playable[3][0],state,player))
+        if playable[3] < 42:
+            p = playable.copy()
+            p[3] += 7
+            moves.append((playable[3],p))
         i = 1
         while i < 4:
-            if self.playable[3+i]:
-                moves.append(self.transition(self.playable[3+i][0],state,player))
-            if self.playable[3-i]:
-                moves.append(self.transition(self.playable[3-i][0],state,player))
+            if playable[3+i] < 42:
+                p = playable.copy()
+                p[3+i] += 7
+                moves.append((playable[3+i],p))
+            if playable[3-i] < 42:
+                p = playable.copy()
+                p[3-i] += 7
+                moves.append((playable[3-i],p))
+            i += 1
         return moves    
                 
     def eval_seq(self,state : str,seq : list,player : str):

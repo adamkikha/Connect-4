@@ -23,7 +23,7 @@ class Puzzle:
     def __init__(self, screen : pygame.Surface, num_row, num_col, screen_width, screen_height):
         self.screen = screen
         self.circles = [] # array of obj
-        self.playable = [] # array of ints
+        self.playable = [0,1,2,3,4,5,6] # array of ints
         self.occupied = [] # array of ints
         self.states = []
         self.rows = []
@@ -37,7 +37,7 @@ class Puzzle:
         self.num_col = num_col
         self.current_state = '0' * (self.num_row * self.num_col)
         self.states.append(self.current_state)
-
+        self.Complete = False
         self.player1 = '1'
         self.player2 = '2'
         self.player1_image = None
@@ -53,7 +53,6 @@ class Puzzle:
         self.font = pygame.font.SysFont("calibri",FONT_SIZE)
         self.adjust_image()
         self.create_circles()
-        self.generate_playable()
         self.generate_checkable()
 
     def update_score(self):
@@ -92,15 +91,15 @@ class Puzzle:
             y = y + self.diameter + INBTWN_SPACE
 
 
-    def generate_playable(self):
-        temp = []
-        for c in range(self.num_col):
-            i = c
-            for r in range(self.num_row):
-                temp.append(i)
-                i += self.num_col
-            self.playable.append(copy(temp))
-            temp.clear()
+    # def generate_playable(self):
+    #     temp = []
+    #     for c in range(self.num_col):
+    #         i = c
+    #         for r in range(self.num_row):
+    #             temp.append(i)
+    #             i += self.num_col
+    #         self.playable.append(copy(temp))
+    #         temp.clear()
 
     def generate_checkable(self):
         row = []
@@ -198,14 +197,32 @@ class Puzzle:
             and y_clicked < y_end):
                 return 6-i
 
+    def play_piece(self,index):
+        image = self.player2_image
+        if self.player_turn == "1":
+            image = self.player1_image
+        col_index = index % 7
+        circle_index = 41 - index
+        self.circles[circle_index].update(self.player_turn,image)
+        self.playable[col_index] += 7
+        self.occupied.append(index)
+        self.update_state(index, self.player_turn)
+        if self.player_turn == "1":
+            self.player_turn = "2"
+        else:
+            self.player_turn = "1"
+        self.update_score()
+        if len(self.occupied) == self.num_col*self.num_row:
+            self.Complete = True
+        
     def drop_piece(self, x_clicked, y_clicked, image, owner):
         col_index = self.get_col_clicked(x_clicked, y_clicked)
         if col_index != None:
-            if self.playable[col_index]:
-                index = self.playable[col_index][0]
+            if self.playable[col_index] < 42:
+                index = self.playable[col_index]
                 circle_index = 41 - index
                 self.circles[circle_index].update(owner,image)
-                self.playable[col_index].remove(index)
+                self.playable[col_index] += 7
                 self.occupied.append(index)
                 self.update_state(index, owner)
                 return True
@@ -277,17 +294,17 @@ class Puzzle:
             if switch_player:
                 self.update_score() 
                 self.player_turn = self.player2
-
+                return True
+            return False
         elif self.player_turn == self.player2:
             switch_player = self.drop_piece(x_clicked, y_clicked, self.player2_image, self.player_turn)
             if switch_player:
                 self.update_score()
                 self.player_turn = self.player1
-            
+                return True
+            return False
         if len(self.occupied) == self.num_col*self.num_row:
-            print("calc score")
-            self.get_score()
-            print("player 1 score: "+ str(self.player1_score)+" \nplayer 2 score: "+ str(self.player2_score))
+            self.Complete = True
 
 
 

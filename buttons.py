@@ -15,12 +15,16 @@ class Button():
         self.height = height
         self.rect = pygame.Rect(self.x_pos, self.y_pos,self.width, self.height)
         self.font = pygame.font.SysFont('ebrima', font_size)
-        self.text = self.font.render(self.label, True, self.text_color)
 
     # draw used to draw the block
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-        screen.blit(self.text, (self.x_pos, self.y_pos))
+    def draw(self, screen , text = None , color = None):
+        if text is None:
+            text = self.label
+        if color is None:
+            color = self.color
+        pygame.draw.rect(screen, color, self.rect)
+        text = self.font.render(text, True, self.text_color)
+        screen.blit(text, (self.x_pos, self.y_pos))    
 
     # check_clicked checks if the mouse click was on the block
     def check_clicked(self, x_clicked, y_clicked):

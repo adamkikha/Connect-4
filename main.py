@@ -1,12 +1,12 @@
+from time import time
 from tkinter import *
 from PIL import ImageTk, Image
 import pygame
 import sys
+from agent import Agent
 from puzzle import Puzzle
-from circles import Circle
 from tree import Tree
 from buttons import Button
-from copy import copy
 
 NUM_ROW = 6
 NUM_COL = 7
@@ -80,11 +80,13 @@ def AI_window():
     pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Alpha-Beta pruning",TEXT_COLOR,FONT_SIZE1)
     pruning.draw(game_screen)
     buttons.append(pruning)
-    no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-100 + 50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
+    no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
-    
-    
+    start_button = Button((SCREEN_WIDTH//3), SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH/3,BUTTON_HEIGHT,(0,0,40),"  I Start",TEXT_COLOR,FONT_SIZE1)
+    start_button.draw(game_screen)
+    buttons.append(start_button)
+    I_start = True
     running = True
     while running:
         for event in pygame.event.get():
@@ -96,16 +98,24 @@ def AI_window():
                     if buttons[i].check_clicked(x_clicked, y_clicked):
                         if i == 0:
                             pruning_selected = True
-                            return
+                            return I_start
                         if i == 1:
                             pruning_selected = False
-                            return
+                            return I_start
+                        if i == 2:
+                            I_start = not I_start
+                            if I_start:
+                                start_button.draw(game_screen,"  I Start")
+                                break
+                            else:
+                                start_button.draw(game_screen,"  AI Starts")
+                                break
             pygame.display.update()
     pygame.quit()
 
 
 
-def message(image_name):
+def window(image_name):
     tree_screen = Tk()
     tree_screen.title("State Tree")
     tree_image = Image.open(image_name)
@@ -129,7 +139,7 @@ def message(image_name):
 def tree_window(states):
     tree = Tree(states, NUM_COL, NUM_ROW)
     image_name = tree.png_name +'.'+tree.extension
-    message(image_name)
+    window(image_name)
 
 
 
@@ -150,33 +160,113 @@ pygame.display.set_icon(icon)
 start_window()
 if start_players:
     #game_screen.fill(BG_COLOR)
-    puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
     # playing_circle = Circle(game_screen, puzzle.circles[0].x_pos, puzzle.circles[0].y_pos - puzzle.diameter-10, puzzle.player1_color, puzzle.diameter/2)
     # playing_circle.draw()
-
+    
+    puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.MOUSEMOTION:
-                x_hovered, y_hovered = pygame.mouse.get_pos()
-                if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
-                    clear_rect = pygame.Rect(0, 0, SCREEN_WIDTH, 140)
-                    #pygame.draw.rect(game_screen, BG_COLOR, clear_rect)
-                    # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
+            # if event.type == pygame.MOUSEMOTION:
+            #     x_hovered, y_hovered = pygame.mouse.get_pos()
+            #     if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
+            #         clear_rect = pygame.Rect(0, 0, SCREEN_WIDTH, 140)
+            #         #pygame.draw.rect(game_screen, BG_COLOR, clear_rect)
+            #         # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # store the coordinates of the clicked position
                 x_clicked, y_clicked = pygame.mouse.get_pos()
-
                 puzzle.play(x_clicked , y_clicked)
-                # if puzzle.player_turn == '2': playing_circle.update(puzzle.player2_color, '0')
-                # else: playing_circle.update(puzzle.player1_color, '0')
+                
                 pygame.display.update()
                 # if puzzle.player_turn == '1': tree_window(copy(puzzle.states))
 
             pygame.display.update()
 else:
-    AI_window()
+    I_start = AI_window()
+    puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
+    agent = Agent(puzzle)
+    if pruning_selected:
+        minmax = agent.prune_minmax
+    else:
+        minmax = agent.minmax
+    Tree = True
+    k = 3
+    max = False
+    buttons = []
+    tree_button = Button(SCREEN_WIDTH*2/5+10, 10,SCREEN_WIDTH*1/5-20,50,(0,0,40),"  Tree = ON",TEXT_COLOR,20)
+    tree_button.draw(game_screen)
+    buttons.append(tree_button)
+    plus_button = Button(SCREEN_WIDTH*2/5+90, 80,35,35,(0,0,40)," +",TEXT_COLOR,25)
+    plus_button.draw(game_screen)
+    buttons.append(plus_button)
+    minus_button = Button(SCREEN_WIDTH*2/5+10, 80,35,35,(0,0,40),"  -",TEXT_COLOR,25)
+    minus_button.draw(game_screen)
+    buttons.append(minus_button)
+    k_button = Button(SCREEN_WIDTH*2/5+50,80,35,35,(0,0,0),str(k),TEXT_COLOR,25)
+    k_button.draw(game_screen)
+    if not I_start:
+        max = True
+        ts = time()
+        index , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
+        print("time taken = ",time()-ts," s")
+        puzzle.play_piece(index)
+    while not puzzle.Complete:
+        pygame.display.update()
+        played = False
+        while not played:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                # if event.type == pygame.MOUSEMOTION:
+                #     x_hovered, y_hovered = pygame.mouse.get_pos()
+                #     if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
+                #         clear_rect = pygame.Rect(0, 0, SCREEN_WIDTH, 140)
+                #         #pygame.draw.rect(game_screen, BG_COLOR, clear_rect)
+                #         # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # store the coordinates of the clicked position
+                    x_clicked, y_clicked = pygame.mouse.get_pos()
+                    Clicked = False
+                    for i in range(len(buttons)):
+                        if buttons[i].check_clicked(x_clicked, y_clicked):
+                            Clicked = True
+                            if i == 0:
+                                Tree = not Tree
+                                if Tree:
+                                    tree_button.draw(game_screen,"  Tree = ON")
+                                else:
+                                    tree_button.draw(game_screen,"  Tree = OFF")
+                            if i == 1:
+                                k += 1
+                                k_button.draw(game_screen," "+str(k))
+                                if k == 2:
+                                    minus_button.draw(game_screen)
+                            if i == 2:
+                                if k > 1:
+                                    k -= 1
+                                    k_button.draw(game_screen," "+str(k))
+                                    if k == 1:
+                                        minus_button.draw(game_screen,color=(170,0,0))
+                    if not Clicked:
+                        if puzzle.play(x_clicked , y_clicked):
+                            played = True
+                    pygame.display.update()
+                    # if puzzle.player_turn == '1': tree_window(copy(puzzle.states))
+        pygame.display.update()
+        ts = time()
+        index , _ = minmax(puzzle.current_state,k,max,puzzle.playable)
+        print("time taken = ",time()-ts," s")
+        puzzle.play_piece(index)
+        pygame.display.update()
+    while True:
+        for event in pygame.event.get([pygame.QUIT]):
+            pygame.quit()
+            sys.exit()

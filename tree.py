@@ -10,17 +10,22 @@ class Tree:
         self.create_tree(states)
         self.save_tree()
 
-    def create_tree(self,states):
-        states_len = len(states)
-        # print(states_len)
-        for i in range(states_len):
+    def create_tree(self,list:list):
+        head = self.graph.node(list.pop(0))
+        for item in list:
+            self.graph.edge(head,self.graph.node(item))
             
-            for j in range(len(states[i][1])):
-                # print(states[i][1][j])
-                self.graph.edge(str(states[i][0]),str(states[i][1][j]))
-            if i+1 < states_len:
-                # print(i)
-                self.graph.edge(str(states[i][0]),str(states[i+1][0]))
+    # def create_tree(self,states):
+    #     states_len = len(states)
+    #     # print(states_len)
+    #     for i in range(states_len):
+            
+    #         for j in range(len(states[i][1])):
+    #             # print(states[i][1][j])
+    #             self.graph.edge(str(states[i][0]),str(states[i][1][j]))
+    #         if i+1 < states_len:
+    #             # print(i)
+    #             self.graph.edge(str(states[i][0]),str(states[i+1][0]))
 
     def save_tree(self):
         self.graph.format = self.extension
