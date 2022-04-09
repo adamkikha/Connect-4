@@ -82,7 +82,7 @@ def AI_window():
     no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
-    start_button = Button(SCREEN_WIDTH//5, SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH*3/5,BUTTON_HEIGHT,(0,0,40),"  Player Starts",TEXT_COLOR,FONT_SIZE1)
+    start_button = Button(SCREEN_WIDTH//5, SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH*3/5,BUTTON_HEIGHT,(0,0,40),"    Player Starts",TEXT_COLOR,FONT_SIZE1)
     start_button.draw(game_screen)
     buttons.append(start_button)
     I_start = True
@@ -104,10 +104,10 @@ def AI_window():
                         if i == 2:
                             I_start = not I_start
                             if I_start:
-                                start_button.draw(game_screen,"  Player Starts")
+                                start_button.draw(game_screen,"    Player Starts")
                                 break
                             else:
-                                start_button.draw(game_screen,"     AI Starts")
+                                start_button.draw(game_screen,"       AI Starts")
                                 break
             pygame.display.update()
     pygame.quit()
@@ -248,6 +248,7 @@ else:
         ts = time()
         index , _ , _= minmax(puzzle.current_state,k,max,puzzle.playable)
         print("time taken = ",time()-ts," s")
+        print("Number of expanded nodes = " , str(len(agent.parent_map.keys())))
         puzzle.play_piece(index)
         pygame.display.update()
         if tree:

@@ -25,7 +25,7 @@ class Agent:
         if k == 0:
             heu = self.heu(state)
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(heu),[])  
+            self.parent_map[parent_key] = (str(heu),[],max)  
             return None , heu , parent_key
         if alpha is None:
             alpha = -100
@@ -53,7 +53,7 @@ class Agent:
                 max_value = value
                 max_move = index
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(max_value),children)
+            self.parent_map[parent_key] = (str(max_value),children,max)
             return max_move , max_value , parent_key
         else:
             index = min_move = -1
@@ -76,7 +76,7 @@ class Agent:
                 min_value = value
                 min_move = index
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(min_value),children)        
+            self.parent_map[parent_key] = (str(min_value),children,max)        
             return min_move , min_value, parent_key
     
     def minmax(self,state : str,k : int,max : bool,playable):
@@ -101,7 +101,7 @@ class Agent:
                 max_value = value
                 max_move = index
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(max_value),children)       
+            self.parent_map[parent_key] = (str(max_value),children,max)       
             return max_move , max_value , parent_key
         else:
             index = min_move = -1
@@ -118,7 +118,7 @@ class Agent:
                 min_value = value
                 min_move = index
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(min_value),children)
+            self.parent_map[parent_key] = (str(min_value),children,max)
             return min_move , min_value , parent_key
         
     def transition(self,index,old_state,player):
