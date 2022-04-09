@@ -83,7 +83,7 @@ class Agent:
         if k == 0:
             heu = self.heu(state)
             parent_key = str(len(self.parent_map.keys()))
-            self.parent_map[parent_key] = (str(heu),[])  
+            self.parent_map[parent_key] = (str(heu),[],max)  
             return None , heu , parent_key
         children = []
         if max:
