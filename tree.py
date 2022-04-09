@@ -6,19 +6,24 @@ from tkinter import Frame, Label, Tk
 from graphviz import Digraph
 
 
-
+# responsible for drawing trees
 class Tree:
+    
+    # seperate thread for tree window mainloop
     class drawer(Thread):
         def __init__(self,tk : Tk,img):
             super().__init__()
             self.tk = tk
             self.img = img
+            
         def run(self) -> None:
             while True:
                 self.tk.update()
                 self.tk.update_idletasks()
     
+    # class variable with a refrence for current tree window
     current_tk = None
+    
     def __init__(self, states):
         self.graph = Digraph()
         self.png_name = 'states_tree'
@@ -26,6 +31,7 @@ class Tree:
         self.create_tree(states)
         self.save_tree()
         
+    # creates tree from parent map
     def create_tree(self,dic : dict):
         for parent , value in dic.items():
             label = "min\n"+value[0]
@@ -36,6 +42,13 @@ class Tree:
                 # self.graph.node(child[2],child[0])
                 self.graph.edge(parent,child[2],child[1])
     
+    # saves the graph in an image    
+    def save_tree(self):
+        self.graph.format = self.extension
+        tree = self.graph.unflatten(stagger=3)
+        tree.render(self.png_name)
+    
+    # displays the tree in a seperate window
     def display(self,image_name):
         tree_screen = tkinter.Toplevel()
         tree_screen.title("State Tree")
@@ -57,8 +70,4 @@ class Tree:
         Tree.current_tk = tree_screen
         thread = Tree.drawer(tree_screen,img)
         thread.start()   
-        
-    def save_tree(self):
-        self.graph.format = self.extension
-        tree = self.graph.unflatten(stagger=3)
-        tree.render(self.png_name)
+    

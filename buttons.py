@@ -1,7 +1,6 @@
 import pygame
 
-# button class inherite from the block class the check_clicked and draw functions
-# buttons are used to create the text box for the game windows
+# buttons are used to create buttons for the game windows
 # buttons are used to create the text box to display info
 
 class Button():

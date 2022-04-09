@@ -7,6 +7,7 @@ from puzzle import Puzzle
 from tree import Tree
 from buttons import Button
 
+# dimensions constants
 NUM_ROW = 6
 NUM_COL = 7
 
@@ -16,13 +17,13 @@ SCREEN_HEIGHT = SCREEN_WIDTH + 50
 SIDES_PADDING = 10
 
 WHITE = (255, 255, 255)
-BG_COLOR = WHITE
+
 # back ground color constant
+BG_COLOR = WHITE
+
 BGROUND_IMG = pygame.image.load("new_BG.jpg")
 
-
 # properties of buttons
-# TEXT_COLOR = (150,150,150)
 TEXT_COLOR = WHITE
 BUTTONS_COLOR = (0,0,0)
 BUTTON_WIDTH = SCREEN_WIDTH - (2* SIDES_PADDING)
@@ -33,6 +34,7 @@ FONT_SIZE2 = 30
 
 
 # windows variables
+
 # start_player checks if player or AI
 start_players = None
 # agent_selected store the selected agent  
@@ -82,6 +84,8 @@ def AI_window():
     no_pruning = Button((SCREEN_WIDTH//2)-(BUTTON_WIDTH//2), (SCREEN_HEIGHT//2)-(BUTTON_HEIGHT//2)-50 + BUTTON_HEIGHT + SIDES_PADDING, BUTTON_WIDTH,BUTTON_HEIGHT,BUTTONS_COLOR," Without Pruning",TEXT_COLOR,FONT_SIZE1)
     no_pruning.draw(game_screen)
     buttons.append(no_pruning)
+    
+    # selects who plays first
     start_button = Button(SCREEN_WIDTH//5, SCREEN_HEIGHT - BUTTON_HEIGHT - SIDES_PADDING, BUTTON_WIDTH*3/5,BUTTON_HEIGHT,(0,0,40),"    Player Starts",TEXT_COLOR,FONT_SIZE1)
     start_button.draw(game_screen)
     buttons.append(start_button)
@@ -112,7 +116,7 @@ def AI_window():
             pygame.display.update()
     pygame.quit()
 
-
+# draws the tree for AI plays
 def tree_window(states):
     if Tree.current_tk:
         Tree.current_tk.destroy()
@@ -122,12 +126,10 @@ def tree_window(states):
 
 
 
-pygame.init()
 # starting the pygame screen
+pygame.init()
 game_screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-# draw the backgroun
-#game_screen.fill(BG_COLOR)
-# game_screen.blit(BGROUND_IMG,(0,0))
+
 # set the title
 pygame.display.set_caption("Connect 4")
 # set the logo
@@ -137,10 +139,9 @@ pygame.display.set_icon(icon)
 
 
 start_window()
+
+# player vs player loop
 if start_players:
-    #game_screen.fill(BG_COLOR)
-    # playing_circle = Circle(game_screen, puzzle.circles[0].x_pos, puzzle.circles[0].y_pos - puzzle.diameter-10, puzzle.player1_color, puzzle.diameter/2)
-    # playing_circle.draw()
     
     puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
     while True:
@@ -149,6 +150,7 @@ if start_players:
                 pygame.quit()
                 sys.exit()
 
+            # hover functionality
             # if event.type == pygame.MOUSEMOTION:
             #     x_hovered, y_hovered = pygame.mouse.get_pos()
             #     if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
@@ -157,22 +159,31 @@ if start_players:
             #         # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                
                 # store the coordinates of the clicked position
                 x_clicked, y_clicked = pygame.mouse.get_pos()
+                
+                # sends the coordinates to the puzzle
                 puzzle.play(x_clicked , y_clicked)
                 
                 pygame.display.update()
-                # if puzzle.player_turn == '1': tree_window(copy(puzzle.states))
 
             pygame.display.update()
+            
+# AI vs player loop
 else:
     I_start = AI_window()
     puzzle = Puzzle(game_screen, NUM_ROW, NUM_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
     agent = Agent(puzzle)
+    
+    # assigns minmax depending on pruning selected or not
     if pruning_selected:
         minmax = agent.prune_minmax
     else:
         minmax = agent.minmax
+        
+    # buttons for showing the tree and assigning k
+    
     tree = True
     k = 3
     max = False
@@ -188,6 +199,8 @@ else:
     buttons.append(minus_button)
     k_button = Button(SCREEN_WIDTH*2/5+50,80,35,35,(0,0,0),str(k),TEXT_COLOR,25)
     k_button.draw(game_screen)
+    
+    # if AI starts
     if not I_start:
         max = True
         ts = time()
@@ -197,6 +210,8 @@ else:
         puzzle.play_piece(index)
         if tree:
             tree_window(agent.parent_map)
+            
+    
     while not puzzle.Complete:
         pygame.display.update()
         played = False
@@ -206,6 +221,7 @@ else:
                     pygame.quit()
                     sys.exit()
 
+                # hover functionality
                 # if event.type == pygame.MOUSEMOTION:
                 #     x_hovered, y_hovered = pygame.mouse.get_pos()
                 #     if x_hovered > puzzle.circles[0].x_pos and x_hovered < puzzle.circles[NUM_COL-1].x_pos:
@@ -214,10 +230,12 @@ else:
                 #         # playing_circle.change_pos(x_hovered, puzzle.circles[0].y_pos - puzzle.diameter-10)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    
                     # store the coordinates of the clicked position
                     x_clicked, y_clicked = pygame.mouse.get_pos()
                     Clicked = False
                     for i in range(len(buttons)):
+                        # if a button is clicked
                         if buttons[i].check_clicked(x_clicked, y_clicked):
                             Clicked = True
                             if i == 0:
@@ -238,12 +256,15 @@ else:
                                     if k == 1:
                                         minus_button.draw(game_screen,color=(170,0,0))
                             pygame.display.update()
+                            
+                    # if mouse click wasn't on a button
                     if not Clicked:
                         if puzzle.play(x_clicked , y_clicked):
                             played = True
         pygame.display.update()
         if puzzle.Complete:
             break
+        # new parent map
         agent.parent_map = dict()
         ts = time()
         index , _ , _= minmax(puzzle.current_state,k,max,puzzle.playable)
