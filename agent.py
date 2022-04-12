@@ -46,9 +46,9 @@ class Agent:
                 # updates alpha
                 if value > alpha:
                     alpha = value
-            # if max_move is not assigned
-            if max_value == -100:
-                max_value = value
+            # if index is not assigned
+            if index == -1:
+                max_value = self.heu(state)
                 max_move = index
                 
             # add the node to the parent map with it's children , chosen value and it's type
@@ -74,9 +74,9 @@ class Agent:
                 # updates beta
                 if value < beta:
                     beta = value
-            # if min_move is not assigned        
-            if min_value == 100:
-                min_value = value
+            # if index is not assigned        
+            if index == -1:
+                min_value = self.heu(state)
                 min_move = index
             # add the node to the parent map with it's children , chosen value and it's type
             parent_key = str(len(self.parent_map.keys()))
@@ -106,9 +106,9 @@ class Agent:
                 if value > max_value:
                     max_value = value
                     max_move = index
-            # if max_move is not assigned
-            if max_value == -100:
-                max_value = value
+            # if index is not assigned
+            if index == -1:
+                max_value = self.heu(state)
                 max_move = index
             parent_key = str(len(self.parent_map.keys()))
             self.parent_map[parent_key] = (str(max_value),children,max)       
@@ -126,9 +126,9 @@ class Agent:
                 if value < min_value:
                     min_value = value
                     min_move = index
-            # if min_move is not assigned
-            if min_value == 100:
-                min_value = value
+            # if index is not assigned
+            if index == -1:
+                min_value = self.heu(state)
                 min_move = index
             parent_key = str(len(self.parent_map.keys()))
             self.parent_map[parent_key] = (str(min_value),children,max)
